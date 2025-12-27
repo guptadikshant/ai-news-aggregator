@@ -2,6 +2,7 @@ from functools import lru_cache
 
 from groq import AsyncGroq
 from openai import AsyncOpenAI
+from sentence_transformers import SentenceTransformer
 
 from config import get_settings
 
@@ -14,7 +15,7 @@ async def get_openai_client() -> AsyncOpenAI:
     Returns:
         AsyncOpenAI: async openai client object
     """
-    return AsyncOpenAI(api_key=get_settings().OPENAI_API_KEY)
+    return AsyncOpenAI(api_key=str(get_settings().OPENAI_API_KEY))
 
 
 @lru_cache(maxsize=1)
@@ -24,4 +25,14 @@ async def get_groq_client() -> AsyncGroq:
     Returns:
         AsyncGroq: async groq client object
     """
-    return AsyncGroq(api_key=get_settings().GROQ_API_KEY)
+    return AsyncGroq(api_key=str(get_settings().GROQ_API_KEY))
+
+
+@lru_cache(maxsize=1)
+def get_embedding_model() -> SentenceTransformer:
+    """Get the embedding model and cached it for subsequent calls
+
+    Returns:
+        SentenceTransformer: loaded embedding model object
+    """
+    return SentenceTransformer(model_name_or_path=get_settings().EMBEDDING_MODEL)
