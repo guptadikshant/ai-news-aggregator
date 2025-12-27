@@ -20,6 +20,14 @@ class YouTubeScrapper:
     def __init__(
         self, max_results: int = 5, languages: Optional[List[str]] = None
     ) -> None:
+        """Intialize the YouTubeScrapper instance.
+
+        Args:
+            max_results (int, optional): Maximum number of search results to return. Defaults to 5.
+            languages (Optional[List[str]], optional): List of language codes for transcripts. Defaults to None.
+        Returns:
+            None
+        """
         self.max_results = max_results
         self.languages = languages or ["en"]
 
@@ -29,6 +37,14 @@ class YouTubeScrapper:
         return await asyncio.to_thread(self._search_video_ids_sync, query)
 
     def _search_video_ids_sync(self, query: str) -> List[str]:
+        """Search the videos against the input query and get the video ids
+
+        Args:
+            query (str): input search query
+
+        Returns:
+            List[str]: list of video IDs
+        """
         try:
             search = VideosSearch(query, limit=self.max_results)
             result = search.result()
@@ -45,6 +61,14 @@ class YouTubeScrapper:
         return await asyncio.to_thread(self._fetch_transcript_sync, video_id)
 
     def _fetch_transcript_sync(self, video_id: str) -> Optional[str]:
+        """Fetched the video transcript against a video id
+
+        Args:
+            video_id (str): input video ID
+
+        Returns:
+            Optional[str]: transcript text if available, else None
+        """
         try:
             ytt_api = YouTubeTranscriptApi()
             fetched_transcript = ytt_api.fetch(video_id)
@@ -63,10 +87,15 @@ class YouTubeScrapper:
         return joined or None
 
     async def transcripts_for_query(self, query: str) -> List[str]:
-        """
-        Search videos for the given query and return transcripts (best-effort).
+        """Search videos for the given query and return transcripts (best-effort).
 
         Returns a list of transcript strings; videos without transcripts are skipped.
+
+        Args:
+            query (str): input search query
+
+        Returns:
+            List[str]: list of transcript strings
         """
 
         video_ids = await self.search_video_ids(query)
@@ -82,7 +111,15 @@ class YouTubeScrapper:
         max_results: int = 5,
         languages: Optional[List[str]] = None,
     ) -> List[str]:
-        """Convenience helper to get transcripts for a query without manual instantiation."""
+        """Convenience helper to get transcripts for a query without manual instantiation.
+
+        Args:
+            query (str): input search query
+            max_results (int, optional): maximum number of video results to consider. Defaults to 5.
+            languages (Optional[List[str]], optional): list of language codes for transcripts. Defaults to None.
+        Returns:
+            List[str]: list of transcript strings
+        """
 
         scrapper = cls(max_results=max_results, languages=languages)
         transcripts = await scrapper.transcripts_for_query(query)
