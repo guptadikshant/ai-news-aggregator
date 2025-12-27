@@ -19,4 +19,4 @@ wheels/
 .vscode/
 .idea/
 __pycache__/
-
+*.log
