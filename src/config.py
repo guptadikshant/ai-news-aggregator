@@ -9,6 +9,7 @@ class Config(BaseSettings):
     OPENAI_API_KEY: SecretStr = SecretStr("")
     GROQ_API_KEY: SecretStr = SecretStr("")
     TAVILY_API_KEY: SecretStr = SecretStr("")
+    SERPER_API_KEY: SecretStr = SecretStr("")
     DATABASE_URL: str = "localhost"
     DATABASE_USER: SecretStr = SecretStr("")
     DATABASE_PASSWORD: SecretStr = SecretStr("")

@@ -16,5 +16,9 @@ def init_logging():
             logging.StreamHandler(),
         ],
     )
+    # Silence verbose internal libraries we don't need in normal logs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+
     logger = logging.getLogger(__name__)
     return logger
