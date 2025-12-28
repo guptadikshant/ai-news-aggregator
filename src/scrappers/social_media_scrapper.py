@@ -29,6 +29,15 @@ class SocialMediaScraper:
     """Async scraper for Reddit and LinkedIn using Tavily and Serper."""
 
     def __init__(self, *, max_results: int = 5, recency_days: int = 3) -> None:
+        """Initialize the SocialMediaScraper instance.
+
+        Args:
+            max_results (int, optional): Maximum number of results to fetch. Defaults to 5.
+            recency_days (int, optional): Number of days to look back for recent posts. Defaults to 3.
+
+        Raises:
+            ValueError: If required API keys are missing.
+        """
         settings = get_settings()
         tavily_key = settings.TAVILY_API_KEY.get_secret_value()
         if not tavily_key:
@@ -52,7 +61,13 @@ class SocialMediaScraper:
         )
 
     async def _search_reddit(self, topic: str) -> list[SocialPostResult]:
-        """Use Tavily to find recent Reddit discussions."""
+        """Use Tavily to find Reddit posts/discussions on a topic.
+        Args:
+            topic (str): The topic to search for on Reddit.
+
+        Returns:
+            list[SocialPostResult]: A list of validated social post results from Reddit.
+        """
 
         query = f"site:reddit.com {topic}"
         logger.info(f"Searching Reddit via Tavily for: {query}")
@@ -87,7 +102,14 @@ class SocialMediaScraper:
         return results
 
     async def _search_linkedin(self, topic: str) -> list[SocialPostResult]:
-        """Use Serper (Google) to find public LinkedIn posts/snippets."""
+        """Use Serper (Google) to find public LinkedIn posts/snippets.
+
+        Args:
+            topic (str): The topic to search for on LinkedIn.
+
+        Returns:
+            list[SocialPostResult]: A list of validated social post results from LinkedIn.
+        """
 
         if not self._serper_key:
             logger.error("SERPER_API_KEY not configured; skipping LinkedIn search.")
@@ -135,7 +157,14 @@ class SocialMediaScraper:
         return results
 
     async def fetch_social_pulse(self, topic: str) -> list[SocialPostResult]:
-        """Fetch combined Reddit + LinkedIn signals for a topic."""
+        """Fetch combined Reddit + LinkedIn signals for a topic.
+
+        Args:
+            topic (str): The topic to search for on social media.
+
+        Returns:
+            list[SocialPostResult]: A combined list of social post results from Reddit and LinkedIn.
+        """
 
         reddit_task = asyncio.create_task(self._search_reddit(topic))
         linkedin_task = asyncio.create_task(self._search_linkedin(topic))
