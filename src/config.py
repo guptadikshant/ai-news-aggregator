@@ -20,6 +20,9 @@ class Config(BaseSettings):
     EMBEDDING_MODEL: str = "Qwen/Qwen3-Embedding-0.6B"
     QDRANT_HOST_URL: str = ""
     QDRANT_API_KEY: SecretStr = SecretStr("")
+    LANGFUSE_SECRET_KEY: SecretStr = SecretStr("")
+    LANGFUSE_PUBLIC_KEY: SecretStr = SecretStr("")
+    LANGFUSE_BASE_URL: str = "https://cloud.langfuse.com"
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
