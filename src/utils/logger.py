@@ -7,7 +7,12 @@ CURRENT_DATETIME = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 os.makedirs("logs", exist_ok=True)
 
 
-def init_logging():
+def init_logging() -> logging.Logger:
+    """Initializes logging configuration.
+
+    Returns:
+        logging.Logger: Configured logger instance.
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(filename)s:%(lineno)d | %(levelname)s | %(message)s",

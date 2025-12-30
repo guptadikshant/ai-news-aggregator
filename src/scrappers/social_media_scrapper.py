@@ -1,4 +1,3 @@
-import asyncio
 import datetime
 
 import httpx
@@ -26,7 +25,7 @@ class SocialPostResult(BaseModel):
 
 
 class SocialMediaScraper:
-    """Async scraper for Reddit and LinkedIn using Tavily and Serper."""
+    """Synchronous scraper for Reddit and LinkedIn using Tavily and Serper."""
 
     def __init__(self, *, max_results: int = 5, recency_days: int = 3) -> None:
         """Initialize the SocialMediaScraper instance.
@@ -60,7 +59,7 @@ class SocialMediaScraper:
             f"Initialized SocialMediaScraper (max_results={max_results}, days={recency_days})."
         )
 
-    async def _search_reddit(self, topic: str) -> list[SocialPostResult]:
+    def _search_reddit(self, topic: str) -> list[SocialPostResult]:
         """Use Tavily to find Reddit posts/discussions on a topic.
         Args:
             topic (str): The topic to search for on Reddit.
@@ -73,8 +72,7 @@ class SocialMediaScraper:
         logger.info(f"Searching Reddit via Tavily for: {query}")
 
         try:
-            response = await asyncio.to_thread(
-                self._tavily.search,
+            response = self._tavily.search(
                 query=query,
                 search_depth="advanced",
                 max_results=self._max_results,
@@ -101,7 +99,7 @@ class SocialMediaScraper:
         logger.info(f"Reddit search returned {len(results)} items.")
         return results
 
-    async def _search_linkedin(self, topic: str) -> list[SocialPostResult]:
+    def _search_linkedin(self, topic: str) -> list[SocialPostResult]:
         """Use Serper (Google) to find public LinkedIn posts/snippets.
 
         Args:
@@ -129,8 +127,8 @@ class SocialMediaScraper:
         logger.info(f"Searching LinkedIn via Serper for: {query}")
 
         try:
-            async with httpx.AsyncClient(timeout=20) as client:
-                resp = await client.post(
+            with httpx.Client(timeout=20) as client:
+                resp = client.post(
                     "https://google.serper.dev/search", headers=headers, json=payload
                 )
                 resp.raise_for_status()
@@ -156,7 +154,7 @@ class SocialMediaScraper:
         logger.info(f"LinkedIn search returned {len(results)} items.")
         return results
 
-    async def fetch_social_pulse(self, topic: str) -> list[SocialPostResult]:
+    def fetch_social_pulse(self, topic: str) -> list[SocialPostResult]:
         """Fetch combined Reddit + LinkedIn signals for a topic.
 
         Args:
@@ -166,12 +164,8 @@ class SocialMediaScraper:
             list[SocialPostResult]: A combined list of social post results from Reddit and LinkedIn.
         """
 
-        reddit_task = asyncio.create_task(self._search_reddit(topic))
-        linkedin_task = asyncio.create_task(self._search_linkedin(topic))
-
-        reddit_results, linkedin_results = await asyncio.gather(
-            reddit_task, linkedin_task
-        )
+        reddit_results = self._search_reddit(topic)
+        linkedin_results = self._search_linkedin(topic)
         combined = reddit_results + linkedin_results
 
         logger.info(f"Collected {len(combined)} total social items.")

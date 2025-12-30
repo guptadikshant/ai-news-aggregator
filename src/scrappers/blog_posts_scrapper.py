@@ -1,4 +1,3 @@
-import asyncio
 from typing import Sequence
 
 from pydantic import BaseModel
@@ -66,7 +65,7 @@ class BlogPostsScraper:
 
         logger.info("Initialized BlogPostsScraper with Tavily client.")
 
-    async def search(self, topic: str) -> list[BlogPostResult]:
+    def search(self, topic: str) -> list[BlogPostResult]:
         """Search for technical blog posts on a given topic.
 
         Args:
@@ -79,9 +78,7 @@ class BlogPostsScraper:
         query = f"technical deep dive engineering blog {topic}"
         logger.info(f"Searching Tavily for topic: {query}")
 
-        # Tavily client is synchronous; run it off the event loop to keep async flow non-blocking.
-        response = await asyncio.to_thread(
-            self._client.search,
+        response = self._client.search(
             query=query,
             search_depth="advanced",
             max_results=self._max_results,

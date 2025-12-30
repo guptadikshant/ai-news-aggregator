@@ -1,5 +1,3 @@
-import asyncio
-
 from youtube_transcript_api import (
     NoTranscriptFound,
     TranscriptsDisabled,
@@ -14,7 +12,7 @@ logger = init_logging()
 
 
 class YouTubeScrapper:
-    """Async wrapper for searching YouTube and fetching transcripts."""
+    """Synchronous wrapper for searching YouTube and fetching transcripts."""
 
     def __init__(
         self, max_results: int = 5, languages: list[str] | None = None
@@ -30,13 +28,8 @@ class YouTubeScrapper:
         self.max_results = max_results
         self.languages = languages or ["en"]
 
-    async def search_video_ids(self, query: str) -> list[str]:
-        """Search YouTube for a query and return a list of video IDs."""
-
-        return await asyncio.to_thread(self._search_video_ids_sync, query)
-
-    def _search_video_ids_sync(self, query: str) -> list[str]:
-        """Search the videos against the input query and get the video ids
+    def search_video_ids(self, query: str) -> list[str]:
+        """Search YouTube for a query and return a list of video IDs.
 
         Args:
             query (str): input search query
@@ -54,13 +47,8 @@ class YouTubeScrapper:
         items = result.get("result", []) if isinstance(result, dict) else []
         return [item.get("id") for item in items if item.get("id")]
 
-    async def fetch_transcript(self, video_id: str) -> str | None:
-        """Fetch a transcript for a single video ID; returns None if unavailable."""
-
-        return await asyncio.to_thread(self._fetch_transcript_sync, video_id)
-
-    def _fetch_transcript_sync(self, video_id: str) -> str | None:
-        """Fetched the video transcript against a video id
+    def fetch_transcript(self, video_id: str) -> str | None:
+        """Fetch a transcript for a single video ID; returns None if unavailable.
 
         Args:
             video_id (str): input video ID
@@ -85,7 +73,7 @@ class YouTubeScrapper:
         joined = " ".join(segments)
         return joined or None
 
-    async def transcripts_for_query(self, query: str) -> list[str]:
+    def transcripts_for_query(self, query: str) -> list[str]:
         """Search videos for the given query and return transcripts (best-effort).
 
         Returns a list of transcript strings; videos without transcripts are skipped.
@@ -97,14 +85,12 @@ class YouTubeScrapper:
             list[str]: list of transcript strings
         """
 
-        video_ids = await self.search_video_ids(query)
-        transcripts = await asyncio.gather(
-            *(self.fetch_transcript(video_id) for video_id in video_ids)
-        )
+        video_ids = self.search_video_ids(query)
+        transcripts = [self.fetch_transcript(video_id) for video_id in video_ids]
         return [transcript for transcript in transcripts if transcript]
 
     @classmethod
-    async def get_transcripts_for_query(
+    def get_transcripts_for_query(
         cls,
         query: str,
         max_results: int = 5,
@@ -121,6 +107,6 @@ class YouTubeScrapper:
         """
 
         scrapper = cls(max_results=max_results, languages=languages)
-        transcripts = await scrapper.transcripts_for_query(query)
+        transcripts = scrapper.transcripts_for_query(query)
         logger.info(f"Fetched {len(transcripts)} transcripts for query '{query}'")
         return transcripts
