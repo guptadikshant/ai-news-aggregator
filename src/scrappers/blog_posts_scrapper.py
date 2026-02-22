@@ -1,3 +1,4 @@
+import asyncio
 from typing import Sequence
 
 from pydantic import BaseModel
@@ -42,6 +43,7 @@ class BlogPostsScraper:
         """
         settings = get_settings()
         api_key = settings.TAVILY_API_KEY.get_secret_value()
+        print(f"TAVILY_API_KEY: {api_key}")
         if not api_key:
             raise ValueError(
                 "TAVILY_API_KEY is missing; set it in the environment or .env file."
@@ -64,7 +66,7 @@ class BlogPostsScraper:
 
         logger.info("Initialized BlogPostsScraper with Tavily client.")
 
-    def search(self, query: str) -> list[BlogPostResult]:
+    async def search(self, topic: str) -> list[BlogPostResult]:
         """Search for technical blog posts on a given topic.
 
         Args:
@@ -73,11 +75,14 @@ class BlogPostsScraper:
         Returns:
             list[BlogPostResult]: A list of validated blog post results.
         """
+
+        query = f"technical deep dive engineering blog {topic}"
         logger.info(f"Searching Tavily for topic: {query}")
 
-        response = self._client.search(
+        # Tavily client is synchronous; run it off the event loop to keep async flow non-blocking.
+        response = await asyncio.to_thread(
+            self._client.search,
             query=query,
-            topic="general",
             search_depth="advanced",
             max_results=self._max_results,
             include_domains=self._include_domains,
