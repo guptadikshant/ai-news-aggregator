@@ -43,7 +43,6 @@ class BlogPostsScraper:
         """
         settings = get_settings()
         api_key = settings.TAVILY_API_KEY.get_secret_value()
-        print(f"TAVILY_API_KEY: {api_key}")
         if not api_key:
             raise ValueError(
                 "TAVILY_API_KEY is missing; set it in the environment or .env file."

@@ -42,7 +42,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = "==0.127.1" },
     { name = "groq", specifier = "==1.0.0" },
     { name = "httpx", specifier = "==0.27.2" },
-    { name = "langfuse", specifier = ">=3.11.2" },
+    { name = "langfuse", specifier = "==3.11.2" },
     { name = "langgraph", specifier = "==1.0.5" },
     { name = "openai", specifier = "==2.14.0" },
     { name = "pydantic-settings", specifier = "==2.12.0" },
