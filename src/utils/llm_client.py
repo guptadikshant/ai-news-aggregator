@@ -4,7 +4,7 @@ from groq import AsyncGroq
 from openai import AsyncOpenAI
 from sentence_transformers import SentenceTransformer
 
-from config import get_settings
+from src.config import get_settings
 
 
 @lru_cache(maxsize=1)
@@ -15,7 +15,7 @@ async def get_openai_client() -> AsyncOpenAI:
     Returns:
         AsyncOpenAI: async openai client object
     """
-    return AsyncOpenAI(api_key=str(get_settings().OPENAI_API_KEY))
+    return AsyncOpenAI(api_key=get_settings().OPENAI_API_KEY.get_secret_value())
 
 
 @lru_cache(maxsize=1)
@@ -25,7 +25,7 @@ async def get_groq_client() -> AsyncGroq:
     Returns:
         AsyncGroq: async groq client object
     """
-    return AsyncGroq(api_key=str(get_settings().GROQ_API_KEY))
+    return AsyncGroq(api_key=get_settings().GROQ_API_KEY.get_secret_value())
 
 
 @lru_cache(maxsize=1)
