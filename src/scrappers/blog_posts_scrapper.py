@@ -85,15 +85,26 @@ class BlogPostsScraper:
             search_depth="advanced",
             max_results=self._max_results,
             include_domains=self._include_domains,
+            # Ask Tavily for parsed page content instead of only short snippets.
+            include_raw_content="markdown",
+            chunks_per_source=3,
         )
 
         results = []
         for item in response.get("results", []):
+            raw_content = item.get("raw_content")
+            # Tavily's `content` field is snippet-oriented; prefer full raw content when available.
+            content = (
+                raw_content
+                if isinstance(raw_content, str) and raw_content.strip()
+                else item.get("content", "")
+            )
+
             results.append(
                 BlogPostResult(
                     title=item.get("title", ""),
                     url=item.get("url", ""),
-                    content=item.get("content", ""),
+                    content=content,
                     score=item.get("score"),
                 )
             )
