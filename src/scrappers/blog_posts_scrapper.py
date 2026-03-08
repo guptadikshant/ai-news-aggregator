@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from tavily import TavilyClient
 
 from src.config import get_settings
+from src.utils.content_cleaner import clean_scraped_content
 from src.utils.logger import init_logging
 
 logger = init_logging()
@@ -99,6 +100,8 @@ class BlogPostsScraper:
                 if isinstance(raw_content, str) and raw_content.strip()
                 else item.get("content", "")
             )
+            # Clean the content to remove markdown/HTML artifacts before validation.
+            content = clean_scraped_content(content)
 
             results.append(
                 BlogPostResult(
