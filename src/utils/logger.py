@@ -7,7 +7,7 @@ CURRENT_DATETIME = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 os.makedirs("logs", exist_ok=True)
 
 
-def init_logging() -> logging.Logger:
+def init_logging(name: str) -> logging.Logger:
     """Initializes logging configuration.
 
     Returns:
@@ -25,5 +25,5 @@ def init_logging() -> logging.Logger:
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(name)
     return logger
