@@ -10,7 +10,7 @@ from src.agent_workflow.input_analyzer.workflow.state import InputAnalyser
 
 
 @lru_cache(maxsize=1)
-async def build_graph():
+def build_graph():
     builder = StateGraph(InputAnalyser)
 
     builder.add_node("analyse_input", analyse_input_node)
