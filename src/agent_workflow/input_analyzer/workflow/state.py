@@ -10,4 +10,3 @@ class InputAnalyser(TypedDict):
     messages: Annotated[list, add_messages]
     selected_platforms: list[str]
     scraped_results: dict[str, list]
-    summary: str
