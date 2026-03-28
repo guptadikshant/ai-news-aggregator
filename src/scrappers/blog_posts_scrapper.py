@@ -8,7 +8,7 @@ from src.config import get_settings
 from src.utils.content_cleaner import clean_scraped_content
 from src.utils.logger import init_logging
 
-logger = init_logging()
+logger = init_logging(__name__)
 
 
 class BlogPostResult(BaseModel):

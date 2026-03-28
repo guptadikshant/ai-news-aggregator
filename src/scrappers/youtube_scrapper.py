@@ -10,7 +10,7 @@ from youtubesearchpython import VideosSearch
 
 from src.utils.logger import init_logging
 
-logger = init_logging()
+logger = init_logging(__name__)
 
 
 class YouTubeScrapper:
