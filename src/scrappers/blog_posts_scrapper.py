@@ -5,9 +5,10 @@ from pydantic import BaseModel
 from tavily import TavilyClient
 
 from src.config import get_settings
+from src.utils.content_cleaner import clean_scraped_content
 from src.utils.logger import init_logging
 
-logger = init_logging()
+logger = init_logging(__name__)
 
 
 class BlogPostResult(BaseModel):
@@ -85,15 +86,28 @@ class BlogPostsScraper:
             search_depth="advanced",
             max_results=self._max_results,
             include_domains=self._include_domains,
+            # Ask Tavily for parsed page content instead of only short snippets.
+            include_raw_content="markdown",
+            chunks_per_source=3,
         )
 
         results = []
         for item in response.get("results", []):
+            raw_content = item.get("raw_content")
+            # Tavily's `content` field is snippet-oriented; prefer full raw content when available.
+            content = (
+                raw_content
+                if isinstance(raw_content, str) and raw_content.strip()
+                else item.get("content", "")
+            )
+            # Clean the content to remove markdown/HTML artifacts before validation.
+            content = clean_scraped_content(content)
+
             results.append(
                 BlogPostResult(
                     title=item.get("title", ""),
                     url=item.get("url", ""),
-                    content=item.get("content", ""),
+                    content=content,
                     score=item.get("score"),
                 )
             )

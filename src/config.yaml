@@ -1,0 +1,6 @@
+genai:
+  models:
+    openai:
+      text: gpt-5-mini
+      embedding: text-embedding-3-small
+    

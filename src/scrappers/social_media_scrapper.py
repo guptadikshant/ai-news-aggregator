@@ -1,14 +1,14 @@
 import asyncio
 import datetime
 
-import httpx
 from pydantic import BaseModel, HttpUrl
 from tavily import TavilyClient
 
 from src.config import get_settings
+from src.utils.content_cleaner import clean_scraped_content
 from src.utils.logger import init_logging
 
-logger = init_logging()
+logger = init_logging(__name__)
 
 
 class SocialPostResult(BaseModel):
@@ -26,7 +26,7 @@ class SocialPostResult(BaseModel):
 
 
 class SocialMediaScraper:
-    """Async scraper for Reddit and LinkedIn using Tavily and Serper."""
+    """Async scraper for Reddit and LinkedIn using Tavily."""
 
     def __init__(self, *, max_results: int = 5, recency_days: int = 3) -> None:
         """Initialize the SocialMediaScraper instance.
@@ -45,14 +45,7 @@ class SocialMediaScraper:
                 "TAVILY_API_KEY is missing; set it in the environment or .env file."
             )
 
-        serper_key = settings.SERPER_API_KEY.get_secret_value()
-        if not serper_key:
-            logger.warning(
-                "SERPER_API_KEY is missing; LinkedIn scraping will fail without it."
-            )
-
         self._tavily = TavilyClient(api_key=tavily_key)
-        self._serper_key = serper_key
         self._max_results = max_results
         self._recency_days = recency_days
 
@@ -79,6 +72,8 @@ class SocialMediaScraper:
                 search_depth="advanced",
                 max_results=self._max_results,
                 days=self._recency_days,
+                include_raw_content="markdown",
+                chunks_per_source=3,
             )
         except Exception as exc:  # noqa: BLE001
             logger.exception(f"Tavily Reddit search failed: {exc}")
@@ -87,12 +82,20 @@ class SocialMediaScraper:
         results = []
         for item in response.get("results", []):
             try:
+                raw_content = item.get("raw_content")
+                content = (
+                    raw_content
+                    if isinstance(raw_content, str) and raw_content.strip()
+                    else item.get("content", "")
+                )
+                # Clean the content to remove markdown/HTML artifacts before validation.
+                content = clean_scraped_content(content)
                 results.append(
                     SocialPostResult(
                         source="Reddit",
                         title=item.get("title", ""),
                         url=item.get("url", ""),
-                        content=item.get("content", ""),
+                        content=content,
                     )
                 )
             except Exception as exc:  # noqa: BLE001
@@ -102,7 +105,7 @@ class SocialMediaScraper:
         return results
 
     async def _search_linkedin(self, topic: str) -> list[SocialPostResult]:
-        """Use Serper (Google) to find public LinkedIn posts/snippets.
+        """Use Tavily to find public LinkedIn posts/articles on a topic.
 
         Args:
             topic (str): The topic to search for on LinkedIn.
@@ -111,46 +114,43 @@ class SocialMediaScraper:
             list[SocialPostResult]: A list of validated social post results from LinkedIn.
         """
 
-        if not self._serper_key:
-            logger.error("SERPER_API_KEY not configured; skipping LinkedIn search.")
-            return []
-
-        query = f'site:linkedin.com/posts {topic} "{self._current_year()}"'
-        payload = {
-            "q": query,
-            "num": self._max_results,
-            "tbs": "qdr:w",  # Past week
-        }
-        headers = {
-            "X-API-KEY": self._serper_key,
-            "Content-Type": "application/json",
-        }
-
-        logger.info(f"Searching LinkedIn via Serper for: {query}")
+        query = f"site:linkedin.com/posts {topic}"
+        logger.info(f"Searching LinkedIn via Tavily for: {query}")
 
         try:
-            async with httpx.AsyncClient(timeout=20) as client:
-                resp = await client.post(
-                    "https://google.serper.dev/search", headers=headers, json=payload
-                )
-                resp.raise_for_status()
-                data = resp.json()
-        except httpx.HTTPError as exc:
-            logger.exception(f"Serper LinkedIn search failed: {exc}")
+            response = await asyncio.to_thread(
+                self._tavily.search,
+                query=query,
+                search_depth="advanced",
+                max_results=self._max_results,
+                days=self._recency_days,
+                include_raw_content="markdown",
+                chunks_per_source=3,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(f"Tavily LinkedIn search failed: {exc}")
             return []
 
         results = []
-        for item in data.get("organic", []):
+        for item in response.get("results", []):
             try:
+                raw_content = item.get("raw_content")
+                content = (
+                    raw_content
+                    if isinstance(raw_content, str) and raw_content.strip()
+                    else item.get("content", "")
+                )
+                # Clean the content to remove markdown/HTML artifacts before validation.
+                content = clean_scraped_content(content)
                 results.append(
                     SocialPostResult(
                         source="LinkedIn",
                         title=item.get("title", "No Title"),
-                        url=item.get("link", ""),
-                        content=item.get("snippet", ""),
+                        url=item.get("url", ""),
+                        content=content,
                     )
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 logger.warning(f"Skipping LinkedIn item due to validation error: {exc}")
 
         logger.info(f"LinkedIn search returned {len(results)} items.")

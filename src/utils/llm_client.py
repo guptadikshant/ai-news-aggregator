@@ -1,31 +1,38 @@
 from functools import lru_cache
 
-from groq import AsyncGroq
-from openai import AsyncOpenAI
+from langchain_openai import ChatOpenAI
 from sentence_transformers import SentenceTransformer
 
 from src.config import get_settings
+from src.utils.file_reader import read_yaml
+
+file_config = read_yaml("src/config.yaml")
+
+text_model, embedding_model = (
+    file_config["genai"]["models"]["openai"]["text"],
+    file_config["genai"]["models"]["openai"]["embedding"],
+)
 
 
 @lru_cache(maxsize=1)
-async def get_openai_client() -> AsyncOpenAI:
+async def get_openai_client() -> ChatOpenAI:
     """Get or create openai client in singleton manner.
     This is created once for all the subsequent processes
 
     Returns:
-        AsyncOpenAI: async openai client object
+        ChatOpenAI: async openai client object
     """
-    return AsyncOpenAI(api_key=get_settings().OPENAI_API_KEY.get_secret_value())
+    return ChatOpenAI(model=text_model, temperature=0)
 
 
-@lru_cache(maxsize=1)
-async def get_groq_client() -> AsyncGroq:
-    """Get or create groq client in singleton manner
-    This is created once for all the subsequent processes
-    Returns:
-        AsyncGroq: async groq client object
-    """
-    return AsyncGroq(api_key=get_settings().GROQ_API_KEY.get_secret_value())
+# @lru_cache(maxsize=1)
+# async def get_groq_client() -> ChatGroq:
+#     """Get or create groq client in singleton manner
+#     This is created once for all the subsequent processes
+#     Returns:
+#         ChatGroq: async groq client object
+#     """
+#     return ChatGroq(model=text_model, temperature=0)
 
 
 @lru_cache(maxsize=1)

@@ -10,7 +10,7 @@ from youtubesearchpython import VideosSearch
 
 from src.utils.logger import init_logging
 
-logger = init_logging()
+logger = init_logging(__name__)
 
 
 class YouTubeScrapper:
@@ -119,8 +119,11 @@ class YouTubeScrapper:
         Returns:
             list[str]: list of transcript strings
         """
-
-        scrapper = cls(max_results=max_results, languages=languages)
-        transcripts = await scrapper.transcripts_for_query(query)
-        logger.info(f"Fetched {len(transcripts)} transcripts for query '{query}'")
-        return transcripts
+        try:
+            scrapper = cls(max_results=max_results, languages=languages)
+            transcripts = await scrapper.transcripts_for_query(query)
+            logger.info(f"Fetched {len(transcripts)} transcripts for query '{query}'")
+            return transcripts
+        except Exception as exc:
+            logger.error(f"Error fetching transcripts for query '{query}': {exc}")
+            return []
