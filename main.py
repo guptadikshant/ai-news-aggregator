@@ -11,8 +11,8 @@ logger = init_logging(__name__)
 VERSION = "v1"
 
 app = FastAPI(
-    title="AI News Agreegator",
-    description="This is a news aggregator app which fetch news from different resources, agreegate them and then show to the user",
+    title="AI News Aggregator",
+    description="This is a news aggregator app which fetch news from different resources, aggregate them and then show to the user",
     version=VERSION,
 )
 
@@ -30,8 +30,8 @@ def health_check():
 # app.include_router(router=user_router, prefix=f"/api/{VERSION}/users", tags=["users"])
 
 
-@app.post("/input_analysis")
-async def input_analysis(user_input: str):
+@app.post("/chat", status_code=status.HTTP_200_OK)
+async def chat(user_input: str):
     logger.info(f"User Input: {user_input}")
     graph = build_graph()
     result = await graph.ainvoke(
