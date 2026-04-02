@@ -2,16 +2,16 @@ from functools import lru_cache
 
 from langgraph.graph import END, START, StateGraph
 
-from src.agent_workflow.input_analyzer.workflow.nodes import (
+from src.agent_workflow.core.state import NewsAggregatorState
+from src.agent_workflow.input_analyzer.nodes import (
     analyse_input_node,
     call_tools_node,
 )
-from src.agent_workflow.input_analyzer.workflow.state import InputAnalyser
 
 
 @lru_cache(maxsize=1)
 def build_graph():
-    builder = StateGraph(InputAnalyser)
+    builder = StateGraph(NewsAggregatorState)
 
     builder.add_node("analyse_input", analyse_input_node)
     builder.add_node("call_tools", call_tools_node)

@@ -2,7 +2,7 @@ import asyncio
 
 from dotenv import find_dotenv, load_dotenv
 
-from src.agent_workflow.input_analyzer.workflow.graph import build_graph
+from src.agent_workflow.input_analyzer.graph import build_graph
 from src.utils.logger import init_logging
 from langchain_core.messages import HumanMessage
 

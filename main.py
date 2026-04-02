@@ -2,7 +2,7 @@ from dotenv import find_dotenv, load_dotenv
 from fastapi import FastAPI, status
 from langchain_core.messages import HumanMessage
 import uvicorn
-from src.agent_workflow.input_analyzer.workflow.graph import build_graph
+from src.agent_workflow.input_analyzer.graph import build_graph
 from src.utils.logger import init_logging
 
 load_dotenv(find_dotenv(), override=True)

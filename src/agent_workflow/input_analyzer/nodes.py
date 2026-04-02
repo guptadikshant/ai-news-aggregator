@@ -1,24 +1,16 @@
 import asyncio
-from typing import Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
 
-from src.agent_workflow.input_analyzer.workflow.state import InputAnalyser
-from src.agent_workflow.input_analyzer.workflow.tools import TOOL_REGISTRY
+from src.agent_workflow.core.models import PlatformRequired
+from src.agent_workflow.core.state import NewsAggregatorState
+from src.agent_workflow.core.tools import TOOL_REGISTRY
 from src.agent_workflow.prompts.input_analysis import SYSTEM_PROMPT
 from src.utils.llm_client import get_openai_client
 from src.utils.logger import init_logging
 
 logger = init_logging(__name__)
-
-
-class PlatformRequired(BaseModel):
-    analysis: str
-    platform_needed: list[Literal["youtube", "social_media", "blog_posts"]] = Field(
-        ..., description="The values with which the the information can be extracted"
-    )
 
 
 async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
@@ -46,7 +38,7 @@ async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
         return None
 
 
-async def analyse_input_node(state: InputAnalyser) -> dict:
+async def analyse_input_node(state: NewsAggregatorState) -> dict:
     try:
         user_query = state["messages"][-1].content
         if not user_query:
@@ -68,7 +60,7 @@ async def analyse_input_node(state: InputAnalyser) -> dict:
         return {"analyse_output": "", "selected_platforms": None}
 
 
-async def call_tools_node(state: InputAnalyser) -> dict:
+async def call_tools_node(state: NewsAggregatorState) -> dict:
     """Node 2: Call only the scrapers for the selected platforms in parallel."""
     user_query = state["messages"][-1].content
     platforms = state["selected_platforms"]
