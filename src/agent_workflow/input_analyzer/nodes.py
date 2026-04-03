@@ -14,6 +14,15 @@ logger = init_logging(__name__)
 
 
 async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
+    """
+    Generate a model completion based on the provided system and user prompts.
+    Args:
+        system_prompt (str): The system prompt to guide the model's behavior.
+        user_prompt (str): The user prompt containing the query or input.
+
+    Returns:
+        dict | None: The model's response as a dictionary, or None if an error occurs.
+    """
     try:
         prompt = ChatPromptTemplate.from_messages(
             [
@@ -21,7 +30,7 @@ async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
                 HumanMessage(content=user_prompt),
             ]
         )
-        llm = await get_openai_client()
+        llm = get_openai_client()
         structured_llm = llm.with_structured_output(PlatformRequired)
         response = await structured_llm.ainvoke(prompt.format_messages())
         logger.info("Model completion successful")
@@ -39,6 +48,15 @@ async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
 
 
 async def analyse_input_node(state: NewsAggregatorState) -> dict:
+    """
+    Analyse the user's input and determine the required platforms.
+
+    Args:
+        state (NewsAggregatorState): The current state of the news aggregator.
+
+    Returns:
+        dict: A dictionary containing the analysis output and selected platforms.
+    """
     try:
         user_query = state["messages"][-1].content
         if not user_query:
@@ -61,21 +79,28 @@ async def analyse_input_node(state: NewsAggregatorState) -> dict:
 
 
 async def call_tools_node(state: NewsAggregatorState) -> dict:
-    """Node 2: Call only the scrapers for the selected platforms in parallel."""
-    user_query = state["messages"][-1].content
-    platforms = state["selected_platforms"]
+    """
+    Call the appropriate tools based on the selected platforms and user query.
+    Args:
+        state (NewsAggregatorState): The current state of the news aggregator.
+
+    Returns:
+        dict: A dictionary containing the results from the called tools.
+    """
+    user_query = state.messages[-1].content
+    platforms = state.selected_platforms
 
     async def _call_scraper(platform: str) -> tuple[str, list]:
         entry = TOOL_REGISTRY.get(platform)
         if not entry:
-            print(f"[call_tools] Skipping unknown platform: {platform}")
+            logger.warning(f"[call_tools] Skipping unknown platform: {platform}")
             return platform, []
-        print(f"[call_tools] Calling scraper for: {platform}")
+        logger.info(f"[call_tools] Calling scraper for: {platform}")
         result = await entry["fn"](**{entry["param"]: user_query})
         return platform, result
 
     results = await asyncio.gather(*[_call_scraper(p) for p in platforms])
     scraped = {platform: data for platform, data in results}
 
-    print(f"[call_tools] Finished scraping: {list(scraped.keys())}")
+    logger.info(f"[call_tools] Finished scraping: {list(scraped.keys())}")
     return {"scraped_results": scraped}
