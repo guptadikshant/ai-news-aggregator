@@ -8,6 +8,7 @@ class NewsAggregatorState(BaseModel):
     analyse_output: str | None = None
     messages: Annotated[list, add_messages]
     selected_platforms: list[str] = []
+    validated_platforms: list[str] = []
     platforms_to_retry: list[str] = []
     scraped_results: dict[str, list] = {}
     retry: bool = False

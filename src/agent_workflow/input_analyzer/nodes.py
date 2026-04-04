@@ -106,6 +106,6 @@ async def call_tools_node(state: NewsAggregatorState) -> dict:
 
     results = await asyncio.gather(*[_call_scraper(p) for p in platforms])
     scraped = {platform: data for platform, data in results}
-
+    merged = {**state.scraped_results, **scraped}
     logger.info(f"[call_tools] Finished scraping: {list(scraped.keys())}")
-    return {"scraped_results": scraped}
+    return {"scraped_results": merged}

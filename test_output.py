@@ -27,8 +27,10 @@ async def main():
     print(f"Retry Count: {result['retry_count']}")
     print(f"Selected Platforms: {result['selected_platforms']}")
     print(f"Platforms to Retry: {result['platforms_to_retry']}")
+    print(f"Validated Platforms: {result['validated_platforms']}")
     print(f"Current Step: {result['current_step']}")
     print(f"Next Step: {result['next_step']}")
+    print(f"Final Response: {result['final_response']}")
     print("=" * 60)
 
 

@@ -76,7 +76,7 @@ async def validate_output_node(state: NewsAggregatorState) -> dict:
             logger.warning(f"Validation call failed for {platform}, skipping")
             continue
 
-        logger.info(
+        logger.debug(
             f"Validation for {platform} — is_valid: {result['is_valid']}, "
             f"retry: {result['retry']}, feedback: {result['feedback']}"
         )
@@ -85,38 +85,42 @@ async def validate_output_node(state: NewsAggregatorState) -> dict:
             platforms_to_retry.append(platform)
 
     needs_retry = len(platforms_to_retry) > 0
-    logger.info(
-        f"Validation complete — needs_retry: {needs_retry}, "
-        f"platforms_to_retry: {platforms_to_retry}"
-    )
-    validated_platforms = [
+    platforms_checked = [
         p for p in (state.platforms_to_retry or []) if p not in platforms_to_retry
     ]
+    validated_platforms = [
+        p for p in state.selected_platforms if p not in platforms_to_retry
+    ] + platforms_checked
+    logger.info(
+        f"Validation complete — \n"
+        f"Needs retry: {needs_retry}, "
+        f"Platforms to retry: {platforms_to_retry}, "
+        f"Validated platforms: {validated_platforms}"
+    )
 
     return {
         "retry": needs_retry,
         "retry_count": state.retry_count + (1 if needs_retry else 0),
-        "selected_platforms": [
-            p for p in state.selected_platforms if p not in platforms_to_retry
-        ]
-        + validated_platforms,
+        "validated_platforms": validated_platforms,
         "platforms_to_retry": platforms_to_retry,
         "current_step": "validator",
-        "next_step": "format" if not needs_retry else "",
+        "next_step": "format_response" if validated_platforms else "",
     }
 
 
 def should_retry(state: NewsAggregatorState) -> str:
     """
-    Decide whether to retry scraping or proceed to end.
+    Decide whether to retry scraping or proceed to format response.
 
     Returns:
-        "call_tools" if retry is needed and under max retries, else "end".
+        "call_tools" if retry is needed and under max retries, else "format_response".
     """
     if state.retry and state.retry_count <= state.max_retry:
         logger.info(
             f"Retrying scraping (attempt {state.retry_count}/{state.max_retry})"
         )
         return "call_tools"
-    logger.info("Validation passed or max retries reached, proceeding to end")
-    return "end"
+    logger.info(
+        "Validation passed or max retries reached, proceeding to format response"
+    )
+    return "format_response"

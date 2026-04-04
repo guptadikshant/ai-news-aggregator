@@ -25,3 +25,8 @@ class ValidateOutput(BaseModel):
         default=False,
         description="Whether to retry the tool calls or not, if False then the final response will be generated with the current data",
     )
+
+class FormatResponseOutput(BaseModel):
+    final_response: str = Field(
+        ..., description="The final response to be sent to the user after formatting the data in markdown format"
+    )
