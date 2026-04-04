@@ -51,7 +51,6 @@ async def validate_output_node(state: NewsAggregatorState) -> dict:
     """
     user_query = state.messages[-1].content
     scraped_data = state.scraped_results
-    analysis = state.analyse_output
 
     platforms_to_retry = []
 
@@ -63,7 +62,6 @@ async def validate_output_node(state: NewsAggregatorState) -> dict:
 
         validation_input = (
             f"User Query: {user_query}\n"
-            f"Analysis Output: {analysis}\n"
             f"Platform: {platform}\n"
             f"Scraped Data: {data}\n"
             f"Validate whether the scraped data from {platform} is relevant "
@@ -95,10 +93,10 @@ async def validate_output_node(state: NewsAggregatorState) -> dict:
     return {
         "retry": needs_retry,
         "retry_count": state.retry_count + (1 if needs_retry else 0),
-        "selected_platforms": platforms_to_retry
-        if needs_retry
-        else state.selected_platforms,
+        "selected_platforms": [p for p in state.selected_platforms if p not in platforms_to_retry],
+        "platforms_to_retry": platforms_to_retry,
         "current_step": "validator",
+        "next_step": "format" if not needs_retry else "analyser",
     }
 
 

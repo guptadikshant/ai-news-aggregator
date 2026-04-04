@@ -63,8 +63,6 @@ async def main():
     result = await graph.ainvoke(
         {
             "messages": [HumanMessage(content=user_input)],
-            "analyse_output": "User wants a step-by-step tutorial to fix mouse click issues. Selected youtube and blog_posts as relevant platforms.",
-            "platforms": "youtube",
             "selected_platforms": ["youtube", "blog_posts"],
             "scraped_results": SCRAPED_DATA,  # type: ignore
         }
@@ -74,8 +72,9 @@ async def main():
     print(f"Retry: {result['retry']}")
     print(f"Retry Count: {result['retry_count']}")
     print(f"Selected Platforms: {result['selected_platforms']}")
+    print(f"Platforms to Retry: {result['platforms_to_retry']}")
     print(f"Current Step: {result['current_step']}")
-    print(f"Final Response: {result['final_response']}")
+    print(f"Next Step: {result['next_step']}")
     print("=" * 60)
 
 

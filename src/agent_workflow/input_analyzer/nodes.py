@@ -88,7 +88,12 @@ async def call_tools_node(state: NewsAggregatorState) -> dict:
         dict: A dictionary containing the results from the called tools.
     """
     user_query = state.messages[-1].content
-    platforms = state.selected_platforms
+    if state.platforms_to_retry:
+        platforms = state.platforms_to_retry
+        logger.info(f"[call_tools] Retrying platforms: {platforms}")
+    else:
+        platforms = state.selected_platforms
+        logger.info(f"[call_tools] Using selected platforms: {platforms}")
 
     async def _call_scraper(platform: str) -> tuple[str, list]:
         entry = TOOL_REGISTRY.get(platform)
