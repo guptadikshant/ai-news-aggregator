@@ -58,7 +58,7 @@ async def analyse_input_node(state: NewsAggregatorState) -> dict:
         dict: A dictionary containing the analysis output and selected platforms.
     """
     try:
-        user_query = state["messages"][-1].content
+        user_query = state.messages[-1].content
         if not user_query:
             return {"analyse_output": "", "selected_platforms": None}
 
