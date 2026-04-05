@@ -15,7 +15,7 @@ text_model, embedding_model = (
 
 
 @lru_cache(maxsize=1)
-async def get_openai_client() -> ChatOpenAI:
+def get_openai_client() -> ChatOpenAI:
     """Get or create openai client in singleton manner.
     This is created once for all the subsequent processes
 

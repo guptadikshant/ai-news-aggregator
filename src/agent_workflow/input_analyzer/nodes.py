@@ -1,12 +1,11 @@
 import asyncio
-from typing import Literal
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
-from pydantic import BaseModel, Field
 
-from src.agent_workflow.input_analyzer.workflow.state import InputAnalyser
-from src.agent_workflow.input_analyzer.workflow.tools import TOOL_REGISTRY
+from src.agent_workflow.core.models import PlatformRequired
+from src.agent_workflow.core.state import NewsAggregatorState
+from src.agent_workflow.core.tools import TOOL_REGISTRY
 from src.agent_workflow.prompts.input_analysis import SYSTEM_PROMPT
 from src.utils.llm_client import get_openai_client
 from src.utils.logger import init_logging
@@ -14,14 +13,16 @@ from src.utils.logger import init_logging
 logger = init_logging(__name__)
 
 
-class PlatformRequired(BaseModel):
-    analysis: str
-    platform_needed: list[Literal["youtube", "social_media", "blog_posts"]] = Field(
-        ..., description="The values with which the the information can be extracted"
-    )
-
-
 async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
+    """
+    Generate a model completion based on the provided system and user prompts.
+    Args:
+        system_prompt (str): The system prompt to guide the model's behavior.
+        user_prompt (str): The user prompt containing the query or input.
+
+    Returns:
+        dict | None: The model's response as a dictionary, or None if an error occurs.
+    """
     try:
         prompt = ChatPromptTemplate.from_messages(
             [
@@ -29,7 +30,7 @@ async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
                 HumanMessage(content=user_prompt),
             ]
         )
-        llm = await get_openai_client()
+        llm = get_openai_client()
         structured_llm = llm.with_structured_output(PlatformRequired)
         response = await structured_llm.ainvoke(prompt.format_messages())
         logger.info("Model completion successful")
@@ -46,9 +47,18 @@ async def model_completion(system_prompt: str, user_prompt: str) -> dict | None:
         return None
 
 
-async def analyse_input_node(state: InputAnalyser) -> dict:
+async def analyse_input_node(state: NewsAggregatorState) -> dict:
+    """
+    Analyse the user's input and determine the required platforms.
+
+    Args:
+        state (NewsAggregatorState): The current state of the news aggregator.
+
+    Returns:
+        dict: A dictionary containing the analysis output and selected platforms.
+    """
     try:
-        user_query = state["messages"][-1].content
+        user_query = state.messages[-1].content
         if not user_query:
             return {"analyse_output": "", "selected_platforms": None}
 
@@ -68,22 +78,34 @@ async def analyse_input_node(state: InputAnalyser) -> dict:
         return {"analyse_output": "", "selected_platforms": None}
 
 
-async def call_tools_node(state: InputAnalyser) -> dict:
-    """Node 2: Call only the scrapers for the selected platforms in parallel."""
-    user_query = state["messages"][-1].content
-    platforms = state["selected_platforms"]
+async def call_tools_node(state: NewsAggregatorState) -> dict:
+    """
+    Call the appropriate tools based on the selected platforms and user query.
+    Args:
+        state (NewsAggregatorState): The current state of the news aggregator.
+
+    Returns:
+        dict: A dictionary containing the results from the called tools.
+    """
+    user_query = state.messages[-1].content
+    if state.platforms_to_retry:
+        platforms = state.platforms_to_retry
+        logger.info(f"[call_tools] Retrying platforms: {platforms}")
+    else:
+        platforms = state.selected_platforms
+        logger.info(f"[call_tools] Using selected platforms: {platforms}")
 
     async def _call_scraper(platform: str) -> tuple[str, list]:
         entry = TOOL_REGISTRY.get(platform)
         if not entry:
-            print(f"[call_tools] Skipping unknown platform: {platform}")
+            logger.warning(f"[call_tools] Skipping unknown platform: {platform}")
             return platform, []
-        print(f"[call_tools] Calling scraper for: {platform}")
+        logger.info(f"[call_tools] Calling scraper for: {platform}")
         result = await entry["fn"](**{entry["param"]: user_query})
         return platform, result
 
     results = await asyncio.gather(*[_call_scraper(p) for p in platforms])
     scraped = {platform: data for platform, data in results}
-
-    print(f"[call_tools] Finished scraping: {list(scraped.keys())}")
-    return {"scraped_results": scraped}
+    merged = {**state.scraped_results, **scraped}
+    logger.info(f"[call_tools] Finished scraping: {list(scraped.keys())}")
+    return {"scraped_results": merged}
