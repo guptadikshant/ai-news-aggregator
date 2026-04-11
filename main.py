@@ -1,9 +1,12 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from dotenv import find_dotenv, load_dotenv
 from fastapi import FastAPI, status
 from langchain_core.messages import HumanMessage
 
 from src.agent_workflow.agent_pipeline import create_agent_pipeline
+from src.agent_workflow.core.cache import initialize_cache
 from src.utils.logger import init_logging
 
 load_dotenv(find_dotenv(), override=True)
@@ -11,10 +14,18 @@ load_dotenv(find_dotenv(), override=True)
 logger = init_logging(__name__)
 VERSION = "v1"
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_cache()
+    yield
+
+
 app = FastAPI(
     title="AI News Aggregator",
     description="This is a news aggregator app which fetch news from different resources, aggregate them and then show to the user",
     version=VERSION,
+    lifespan=lifespan,
 )
 
 

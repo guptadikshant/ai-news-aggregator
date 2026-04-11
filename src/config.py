@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Config(BaseSettings):
     """Configuration class to hold all the settings for the application."""
+
     OPENAI_API_KEY: SecretStr = SecretStr("")
     GROQ_API_KEY: SecretStr = SecretStr("")
     TAVILY_API_KEY: SecretStr = SecretStr("")
@@ -23,6 +24,9 @@ class Config(BaseSettings):
     LANGFUSE_SECRET_KEY: SecretStr = SecretStr("")
     LANGFUSE_PUBLIC_KEY: SecretStr = SecretStr("")
     LANGFUSE_BASE_URL: str = "https://cloud.langfuse.com"
+    CACHE_COLLECTION_NAME: str = "query_cache"
+    CACHE_SIMILARITY_THRESHOLD: float = 0.90
+    CACHE_ENABLED: bool = True
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
