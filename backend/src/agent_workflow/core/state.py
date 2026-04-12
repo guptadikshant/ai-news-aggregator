@@ -18,3 +18,5 @@ class NewsAggregatorState(BaseModel):
     current_step: str | None = "analyser"
     next_step: str | None = None
     final_response: str | None = None
+    cache_hit: bool = False
+    cache_score: float = 0.0

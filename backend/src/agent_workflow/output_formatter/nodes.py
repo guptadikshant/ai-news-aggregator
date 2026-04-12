@@ -2,9 +2,9 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from ...utils.llm_client import get_openai_client
 from ...utils.logger import init_logging
+from ..core.models import FormatResponseOutput
 from ..core.state import NewsAggregatorState
 from ..prompts.format_response import SYSTEM_PROMPT
-from ..core.models import FormatResponseOutput
 
 logger = init_logging(__name__)
 
@@ -28,7 +28,11 @@ async def model_completion(system_prompt: str, user_prompt: str):
         structured_llm = llm.with_structured_output(FormatResponseOutput)
         response = await structured_llm.ainvoke(messages)
         logger.info("Model completion successful")
-        return response.model_dump() if isinstance(response, FormatResponseOutput) else None
+        return (
+            response.model_dump()
+            if isinstance(response, FormatResponseOutput)
+            else None
+        )
     except Exception as e:
         logger.error(f"Error in model completion: {e}")
         return None
@@ -58,7 +62,7 @@ async def output_formatter_node(state: NewsAggregatorState) -> dict:
             elif platform == "youtube":
                 for video in data:
                     formatted_content.append(
-                        f"Platform: {platform}\nTranscript: {video.transcript}\n\n"
+                        f"Platform: {platform}\nTranscript: {video}\n\n"
                     )
         content_to_format += (" ").join(formatted_content)
 
@@ -75,4 +79,9 @@ async def output_formatter_node(state: NewsAggregatorState) -> dict:
 
     logger.info(f"Formatted output generated for user query: {user_query}")
 
-    return {"final_response": formatted_output}
+    final_response = (
+        formatted_output.get("final_response", "")
+        if isinstance(formatted_output, dict)
+        else formatted_output
+    )
+    return {"final_response": final_response or ""}

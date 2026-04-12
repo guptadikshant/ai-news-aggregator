@@ -10,7 +10,7 @@ from src.agent_workflow.output_validator.nodes import (
 )
 
 
-@lru_cache(maxsize=1) 
+@lru_cache(maxsize=1)
 def build_graph():
     builder = StateGraph(NewsAggregatorState)
 
