@@ -159,7 +159,9 @@ class QdrantVectorStore:
     ) -> None:
         """Create a new Qdrant collection. Skips if it already exists."""
         if self._client.collection_exists(collection_name):
-            logger.warning(f"Collection '{collection_name}' already exists. Skipping creation.")
+            logger.warning(
+                f"Collection '{collection_name}' already exists. Skipping creation."
+            )
             return
         self._client.create_collection(
             collection_name=collection_name,
@@ -169,7 +171,9 @@ class QdrantVectorStore:
                 on_disk=on_disk,
             ),
         )
-        logger.info(f"Created collection '{collection_name}' with distance '{distance}'")
+        logger.info(
+            f"Created collection '{collection_name}' with distance '{distance}'"
+        )
 
     def delete_collection(self, collection_name: str) -> None:
         """Delete a collection and all its data."""
@@ -206,7 +210,9 @@ class QdrantVectorStore:
             for pid, vec, pl in zip(point_ids, vectors, payloads)
         ]
         self._client.upsert(collection_name=collection_name, points=points)
-        logger.info(f"Inserted {len(points)} points into collection '{collection_name}'")
+        logger.info(
+            f"Inserted {len(points)} points into collection '{collection_name}'"
+        )
         return point_ids
 
     def bulk_insert(
@@ -226,7 +232,9 @@ class QdrantVectorStore:
             batch_ids = ids[start:end] if ids else None
             inserted = self.insert(collection_name, batch_texts, batch_meta, batch_ids)
             all_ids.extend(inserted)
-        logger.info(f"Inserted a total of {len(all_ids)} points into collection '{collection_name}'")
+        logger.info(
+            f"Inserted a total of {len(all_ids)} points into collection '{collection_name}'"
+        )
         return all_ids
 
     # ── Update ───────────────────────────────────────────────────────────
@@ -254,6 +262,7 @@ class QdrantVectorStore:
                 points=[point_id],
             )
         logger.info(f"Updated point '{point_id}' in collection '{collection_name}'")
+
     # ── Delete ───────────────────────────────────────────────────────────
 
     def delete(self, collection_name: str, point_ids: Sequence[str]) -> None:
@@ -263,6 +272,7 @@ class QdrantVectorStore:
             points_selector=PointIdsList(points=list(point_ids)),
         )
         logger.info(f"Deleted points '{point_ids}' from collection '{collection_name}'")
+
     def delete_by_metadata(self, collection_name: str, key: str, value: Any) -> None:
         """Delete all points matching a metadata filter."""
         self._client.delete(
@@ -273,7 +283,9 @@ class QdrantVectorStore:
                 )
             ),
         )
-        logger.info(f"Deleted points with metadata '{key}={value}' from collection '{collection_name}'")
+        logger.info(
+            f"Deleted points with metadata '{key}={value}' from collection '{collection_name}'"
+        )
 
     # ── Search ───────────────────────────────────────────────────────────
 
@@ -303,7 +315,9 @@ class QdrantVectorStore:
             score_threshold=score_threshold,
             query_filter=qdrant_filter,
         )
-        logger.info(f"Search in collection '{collection_name}' with query '{query}' returned {len(results.points)} results")    
+        logger.info(
+            f"Search in collection '{collection_name}' with query '{query}' returned {len(results.points)} results"
+        )
         return [
             {"id": hit.id, "score": hit.score, "payload": hit.payload}
             for hit in results.points
@@ -316,5 +330,7 @@ class QdrantVectorStore:
         records = self._client.retrieve(
             collection_name=collection_name, ids=point_ids, with_payload=True
         )
-        logger.info(f"Retrieved points '{point_ids}' from collection '{collection_name}'")
+        logger.info(
+            f"Retrieved points '{point_ids}' from collection '{collection_name}'"
+        )
         return [{"id": r.id, "payload": r.payload} for r in records]

@@ -2,7 +2,6 @@ import asyncio
 
 from dotenv import find_dotenv, load_dotenv
 from langchain_core.messages import HumanMessage
-
 from src.agent_workflow.agent_pipeline import create_agent_pipeline
 from src.utils.logger import init_logging
 

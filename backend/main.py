@@ -3,8 +3,9 @@ from contextlib import asynccontextmanager
 import uvicorn
 from dotenv import find_dotenv, load_dotenv
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 from langchain_core.messages import HumanMessage
-
+from pydantic import BaseModel
 from src.agent_workflow.agent_pipeline import create_agent_pipeline
 from src.agent_workflow.core.cache import initialize_cache
 from src.utils.logger import init_logging
@@ -28,6 +29,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class ChatRequest(BaseModel):
+    user_input: str
+
 
 @app.get("/")
 def root():
@@ -39,15 +52,12 @@ def health_check():
     return {"message": "OK"}
 
 
-# app.include_router(router=user_router, prefix=f"/api/{VERSION}/users", tags=["users"])
-
-
 @app.post("/chat", status_code=status.HTTP_200_OK)
-async def chat(user_input: str):
-    logger.info(f"User Input: {user_input}")
+async def chat(request: ChatRequest):
+    logger.info(f"User Input: {request.user_input}")
     pipeline = create_agent_pipeline()
     result = await pipeline.ainvoke(
-        {"messages": [HumanMessage(content=user_input)]}  # type:ignore
+        {"messages": [HumanMessage(content=request.user_input)]}  # type:ignore
     )
     return {
         "final_response": result["final_response"],
