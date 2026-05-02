@@ -113,3 +113,9 @@ async def save_to_cache_node(state) -> dict:
         selected_platforms=state.selected_platforms,
     )
     return {}
+
+def route_after_cache(state) -> str:
+    """Conditional edge: skip the pipeline when a cache hit is found."""
+    if state.cache_hit:
+        return "end"
+    return "input_analyser"

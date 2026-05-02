@@ -1,0 +1,28 @@
+# Python bytecode and virtual environments
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Logs and notebook artifacts
+logs/
+notebooks/
+*.log
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# VCS and editor files
+.git/
+.gitignore
+.vscode/
+.DS_Store

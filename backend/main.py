@@ -10,7 +10,7 @@ from src.agent_workflow.agent_pipeline import create_agent_pipeline
 from src.agent_workflow.core.cache import initialize_cache
 from src.utils.logger import init_logging
 
-load_dotenv(find_dotenv(), override=True)
+load_dotenv(find_dotenv(), override=False)
 
 logger = init_logging(__name__)
 VERSION = "v1"
