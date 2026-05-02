@@ -4,7 +4,7 @@ import os
 
 CURRENT_DATETIME = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-os.makedirs("logs", exist_ok=True)
+# os.makedirs("logs", exist_ok=True)
 
 
 def init_logging(name: str) -> logging.Logger:
@@ -17,7 +17,7 @@ def init_logging(name: str) -> logging.Logger:
         level=logging.INFO,
         format="%(asctime)s | %(filename)s:%(lineno)d | %(levelname)s | %(message)s",
         handlers=[
-            logging.FileHandler(os.path.join("logs", f"app_{CURRENT_DATETIME}.log")),
+            # logging.FileHandler(os.path.join("logs", f"app_{CURRENT_DATETIME}.log")),
             logging.StreamHandler(),
         ],
     )

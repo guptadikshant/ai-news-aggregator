@@ -60,14 +60,14 @@ async def analyse_input_node(state: NewsAggregatorState) -> dict:
     try:
         user_query = state.messages[-1].content
         if not user_query:
-            return {"analyse_output": "", "selected_platforms": None}
+            return {"analyse_output": "", "selected_platforms": []}
 
         model_response = await model_completion(
             system_prompt=SYSTEM_PROMPT, user_prompt=user_query
         )
 
         if not model_response:
-            return {"analyse_output": "", "selected_platforms": None}
+            return {"analyse_output": "", "selected_platforms": []}
         logger.info("Successfully analysed the input")
         return {
             "analyse_output": model_response["analysis"],
@@ -75,7 +75,7 @@ async def analyse_input_node(state: NewsAggregatorState) -> dict:
         }
     except Exception as e:
         logger.error(f"Error in analysing input: {e}")
-        return {"analyse_output": "", "selected_platforms": None}
+        return {"analyse_output": "", "selected_platforms": []}
 
 
 async def call_tools_node(state: NewsAggregatorState) -> dict:
@@ -94,6 +94,10 @@ async def call_tools_node(state: NewsAggregatorState) -> dict:
     else:
         platforms = state.selected_platforms
         logger.info(f"[call_tools] Using selected platforms: {platforms}")
+
+    if not platforms:
+        logger.warning("[call_tools] No platforms selected, skipping scraping")
+        return {"scraped_results": state.scraped_results}
 
     async def _call_scraper(platform: str) -> tuple[str, list]:
         entry = TOOL_REGISTRY.get(platform)
